@@ -24,7 +24,7 @@ dag = DAG(
     "spark_pi",
     default_args=default_args,
     catchup=False,
-    schedule_interval=None,
+    schedule_interval=timedelta(minutes=2),
     tags=["ezaf", "spark", "pi"],
     params={
         "airgap_registry_url": Param(
