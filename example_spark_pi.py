@@ -9,10 +9,10 @@ from airflow.providers.cncf.kubernetes.sensors.spark_kubernetes import (
 from airflow.utils.dates import days_ago
 
 default_args = {
-    "owner": "airflow",
+    "owner": "anusha",
     "depends_on_past": False,
     "start_date": days_ago(1),
-    "email": ["airflow@example.com"],
+    "email": ["anusha@example.com"],
     "email_on_failure": False,
     "email_on_retry": False,
     "max_active_runs": 1,
@@ -41,6 +41,7 @@ submit = SparkKubernetesOperator(
     application_file="example_spark_pi.yaml",
     # do_xcom_push=True,
     delete_on_termination=False,
+    namespace='anusha-c2f054da',
     dag=dag,
     enable_impersonation_from_ldap_user=True,
 )
