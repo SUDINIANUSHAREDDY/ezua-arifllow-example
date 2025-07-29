@@ -12,7 +12,7 @@ default_args = {
 }
 
 def create_pod_override_dict(image_name):
-    return {
+    pod_spec = {
         "containers": [
             {
                 "name": "base",
@@ -25,6 +25,7 @@ def create_pod_override_dict(image_name):
         ],
         "restartPolicy": "Never",
     }
+    return {"spec": pod_spec}
 
 with DAG(
     'test_vrealize_workflow',
