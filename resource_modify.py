@@ -1,6 +1,7 @@
 from airflow import DAG
 from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
 from airflow.utils.dates import days_ago
+from kubernetes.client import models as k8s
 
 namespace = 'admin-635a7131'
 
@@ -11,21 +12,23 @@ default_args = {
     "retries": 0,
 }
 
-def create_pod_override_dict(image_name):
-    pod_spec = {
-        "containers": [
-            {
-                "name": "base",
-                "image": image_name,
-                "resources": {
-                    "requests": {"cpu": "100m", "memory": "128Mi"},
-                    "limits": {"cpu": "200m", "memory": "256Mi"},
-                },
-            }
-        ],
-        "restartPolicy": "Never",
-    }
-    return {"spec": pod_spec}
+def make_pod_override(image: str):
+    container = k8s.V1Container(
+        name="base",
+        image=image,
+        resources=k8s.V1ResourceRequirements(
+            requests={"cpu": "100m", "memory": "128Mi"},
+            limits={"cpu": "200m", "memory": "256Mi"},
+        ),
+    )
+    pod_spec = k8s.V1PodSpec(
+        containers=[container],
+        restart_policy="Never",
+    )
+    pod = k8s.V1Pod(
+        spec=pod_spec
+    )
+    return pod
 
 with DAG(
     'test_vrealize_workflow',
@@ -51,7 +54,7 @@ print(token)
         in_cluster=True,
         is_delete_operator_pod=True,
         do_xcom_push=True,
-        pod_override=create_pod_override_dict('python:3.8-slim'),
+        pod_override=make_pod_override('python:3.8-slim'),
     )
 
     fetch_data = KubernetesPodOperator(
@@ -74,7 +77,7 @@ print(f"Fetched data for view {view_id} and resource {resource_id}: {data}")
         in_cluster=True,
         is_delete_operator_pod=True,
         do_xcom_push=True,
-        pod_override=create_pod_override_dict('python:3.8-slim'),
+        pod_override=make_pod_override('python:3.8-slim'),
     )
 
     upload_data = KubernetesPodOperator(
@@ -94,7 +97,7 @@ print(f"Uploading dummy file for {view_id}_{resource_id}.json to dummy S3 locati
         in_cluster=True,
         is_delete_operator_pod=True,
         do_xcom_push=True,
-        pod_override=create_pod_override_dict('python:3.8-slim'),
+        pod_override=make_pod_override('python:3.8-slim'),
     )
 
     fetch_token >> fetch_data >> upload_data
