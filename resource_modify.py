@@ -16,10 +16,8 @@ with DAG(
 ) as dag:
 
     resources = Resources(
-        request_cpu="500m",
-        request_memory="512Mi",
-        limit_cpu="1",
-        limit_memory="1Gi",
+        cpu=0.5,  # 500m CPU = 0.5 cores
+        ram=512,  # 512 MB RAM
     )
 
     task = KubernetesPodOperator(
