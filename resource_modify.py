@@ -1,7 +1,7 @@
 from airflow import DAG
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import KubernetesPodOperator
 from airflow.utils.dates import days_ago
-from kubernetes.client import V1ResourceRequirements
+from airflow.utils.operator_resources import Resources
 
 default_args = {
     'start_date': days_ago(1),
@@ -15,10 +15,11 @@ with DAG(
     tags=['example'],
 ) as dag:
 
-    # Define resource requests and limits
-    resources = V1ResourceRequirements(
-        requests={"cpu": "500m", "memory": "512Mi"},
-        limits={"cpu": "1", "memory": "1Gi"},
+    resources = Resources(
+        request_cpu="500m",
+        request_memory="512Mi",
+        limit_cpu="1",
+        limit_memory="1Gi",
     )
 
     task = KubernetesPodOperator(
