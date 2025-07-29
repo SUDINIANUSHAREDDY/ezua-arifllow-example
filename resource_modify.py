@@ -1,7 +1,7 @@
 from airflow import DAG
 from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
 from airflow.utils.dates import days_ago
-from kubernetes.client import models as k8s  # keep using models alias
+from kubernetes.client import models as k8s
 
 namespace = 'admin-635a7131'
 
@@ -27,8 +27,8 @@ def create_pod_override(image_name):
         containers=[container],
         restart_policy="Never",
     )
-    pod = k8s.V1Pod(spec=pod_spec)
-    return pod.to_dict()  # <-- IMPORTANT, convert to dict!
+    # Return only the pod spec as a dict
+    return pod_spec.to_dict()
 
 with DAG(
     'test_vrealize_workflow',
