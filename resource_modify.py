@@ -1,4 +1,3 @@
-from kubernetes.client import V1ObjectMeta
 from airflow import DAG
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import KubernetesPodOperator
 from airflow.utils.dates import days_ago
@@ -8,7 +7,7 @@ default_args = {
 }
 
 with DAG(
-    'example_kubernetes_pod_operator_xcom_resources_dict_with_pod_override',
+    'example_kubernetes_pod_operator_with_pod_override_dict',
     schedule_interval=None,
     default_args=default_args,
     catchup=False,
@@ -22,12 +21,14 @@ with DAG(
         "gpus": 0,
     }
 
-    pod_metadata = V1ObjectMeta(
-        annotations={
-            "dag_id": "{{ dag.dag_id }}",
-            "run_id": "{{ run_id }}",
+    pod_override = {
+        "metadata": {
+            "annotations": {
+                "dag_id": "{{ dag.dag_id }}",
+                "run_id": "{{ run_id }}",
+            }
         }
-    )
+    }
 
     kpo_task = KubernetesPodOperator(
         namespace='admin-635a7131',
@@ -44,7 +45,7 @@ with DAG(
         do_xcom_push=True,
         resources=resources,
         is_delete_operator_pod=True,
-        pod_override={"metadata": pod_metadata},
+        pod_override=pod_override,
     )
 
     kpo_task
