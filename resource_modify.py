@@ -7,18 +7,31 @@ default_args = {
 }
 
 with DAG(
-    'example_kubernetes_pod_operator_xcom_resources_dict',
+    'example_kubernetes_pod_operator_with_resource_limits',
     schedule_interval=None,
     default_args=default_args,
     catchup=False,
     tags=['example'],
 ) as dag:
 
-    resources = {
-        "cpus": 1,    # CPU cores as integer
-        "ram": 512,   # RAM in MB
-        "disk": 0,    # Disk in MB (0 if not used)
-        "gpus": 0     # Number of GPUs
+    pod_override = {
+        "spec": {
+            "containers": [
+                {
+                    "name": "base",  # This must match the default container name
+                    "resources": {
+                        "requests": {
+                            "cpu": "500m",
+                            "memory": "512Mi"
+                        },
+                        "limits": {
+                            "cpu": "1",
+                            "memory": "1Gi"
+                        }
+                    }
+                }
+            ]
+        }
     }
 
     kpo_task = KubernetesPodOperator(
@@ -34,8 +47,8 @@ with DAG(
         task_id="kpo_task",
         get_logs=True,
         do_xcom_push=True,
-        resources=resources,
         is_delete_operator_pod=True,
+        pod_override=pod_override,
     )
 
     kpo_task
