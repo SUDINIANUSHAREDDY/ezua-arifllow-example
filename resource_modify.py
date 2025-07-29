@@ -26,6 +26,9 @@ def make_pod_override(image: str):
         restart_policy="Never",
     )
     pod = k8s.V1Pod(
+        api_version="v1",        # <---- THIS IS REQUIRED
+        kind="Pod",              # <---- THIS IS REQUIRED
+        metadata=k8s.V1ObjectMeta(name="override-pod"),
         spec=pod_spec
     )
     return pod
