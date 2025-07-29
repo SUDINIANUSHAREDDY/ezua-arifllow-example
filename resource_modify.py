@@ -7,7 +7,7 @@ default_args = {
 }
 
 with DAG(
-    'example_kubernetes_pod_operator_with_pod_override_dict',
+    'example_kubernetes_pod_operator_without_annotations',
     schedule_interval=None,
     default_args=default_args,
     catchup=False,
@@ -23,10 +23,7 @@ with DAG(
 
     pod_override = {
         "metadata": {
-            "annotations": {
-                "dag_id": "{{ dag.dag_id }}",
-                "run_id": "{{ run_id }}",
-            }
+            # No annotations here
         }
     }
 
