@@ -32,7 +32,7 @@ def create_pod_override(image_name):
     return pod
 
 with DAG(
-    'test_vrealize_workflow',
+    'resource_vrealize_workflow',
     default_args=default_args,
     schedule_interval=None,  # Manual trigger for testing
     catchup=False
