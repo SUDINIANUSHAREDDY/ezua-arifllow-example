@@ -22,7 +22,7 @@ with DAG(
     }
 
     kpo_task = KubernetesPodOperator(
-        namespace='default',
+        namespace='admin-635a7131',
         image='python:3.9-slim',
         cmds=["python", "-c"],
         arguments=[
