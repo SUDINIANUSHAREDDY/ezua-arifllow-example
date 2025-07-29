@@ -1,32 +1,33 @@
 from airflow import DAG
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import KubernetesPodOperator
 from airflow.utils.dates import days_ago
-from kubernetes.client.models import V1ResourceRequirements
 
-# Define namespace
+# Namespace to run the pods in
 namespace = 'admin-635a7131'
 
-# DAG default arguments
+# Default arguments for the DAG
 default_args = {
-    "owner": "airflow",
-    "depends_on_past": False,
-    "start_date": days_ago(1),
-    "retries": 0,
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'start_date': days_ago(1),
+    'retries': 0,
 }
 
-# Define Kubernetes resource requests and limits
-resources = V1ResourceRequirements(
-    requests={"memory": "128Mi", "cpu": "100m"},
-    limits={"memory": "256Mi", "cpu": "200m"}
-)
+# Define resource requests and limits as a dictionary
+resource_limits = {
+    "request_memory": "128Mi",
+    "request_cpu": "100m",
+    "limit_memory": "256Mi",
+    "limit_cpu": "200m"
+}
 
 # Define the DAG
 with DAG(
     dag_id='test_vrealize_workflow',
     default_args=default_args,
-    schedule_interval=None,
+    schedule_interval=None,  # Manual trigger only
     catchup=False,
-    description="Test DAG with KubernetesPodOperators and resource limits"
+    description="DAG with KubernetesPodOperators and resource limits"
 ) as dag:
 
     # Task 1: Fetch token
@@ -47,7 +48,7 @@ print(token)
         in_cluster=True,
         is_delete_operator_pod=True,
         do_xcom_push=True,
-        resources=resources
+        resources=resource_limits
     )
 
     # Task 2: Fetch data
@@ -71,7 +72,7 @@ print(f"Fetched data for view {view_id} and resource {resource_id}: {data}")
         in_cluster=True,
         is_delete_operator_pod=True,
         do_xcom_push=True,
-        resources=resources
+        resources=resource_limits
     )
 
     # Task 3: Upload data
@@ -92,8 +93,8 @@ print(f"Uploading dummy file for {view_id}_{resource_id}.json to dummy S3 locati
         in_cluster=True,
         is_delete_operator_pod=True,
         do_xcom_push=True,
-        resources=resources
+        resources=resource_limits
     )
 
-    # Define task dependencies
+    # Set task dependencies
     fetch_token >> fetch_data >> upload_data
