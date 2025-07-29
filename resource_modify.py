@@ -16,15 +16,20 @@ with DAG(
 ) as dag:
 
     resources = Resources(
-        cpu=0.5,  # 500m CPU = 0.5 cores
-        ram=512,  # 512 MB RAM
+        cpus=1,
+        ram=512,
+        disk=0,
+        gpus=0,
     )
 
     task = KubernetesPodOperator(
         namespace='default',
         image='python:3.9-slim',
         cmds=["python", "-c"],
-        arguments=["print('Hello from KubernetesPodOperator'); import json; print(json.dumps({'result': 42}))"],
+        arguments=[
+            "print('Hello from KubernetesPodOperator');"
+            "import json; print(json.dumps({'result': 42}))"
+        ],
         labels={"foo": "bar"},
         name="example-kpo",
         task_id="kpo_task",
