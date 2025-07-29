@@ -1,41 +1,40 @@
 from airflow import DAG
 from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
 from airflow.utils.dates import days_ago
-from kubernetes.client import V1Pod, V1PodSpec, V1Container, V1ResourceRequirements
+from kubernetes.client import models as k8s  # keep using models alias
 
 namespace = 'admin-635a7131'
+
 default_args = {
     "owner": "airflow",
     "depends_on_past": False,
     "start_date": days_ago(1),
-    "retries": 0
+    "retries": 0,
 }
 
-# Define resource requests and limits
-resource_requirements = V1ResourceRequirements(
+resource_requirements = k8s.V1ResourceRequirements(
     requests={"memory": "128Mi", "cpu": "100m"},
     limits={"memory": "256Mi", "cpu": "200m"},
 )
 
-# Helper function to create pod_override with resource limits
 def create_pod_override(image_name):
-    container = V1Container(
+    container = k8s.V1Container(
         name="base",
         image=image_name,
         resources=resource_requirements,
     )
-    pod_spec = V1PodSpec(
+    pod_spec = k8s.V1PodSpec(
         containers=[container],
         restart_policy="Never",
     )
-    pod = V1Pod(spec=pod_spec)
-    return pod
+    pod = k8s.V1Pod(spec=pod_spec)
+    return pod.to_dict()  # <-- IMPORTANT, convert to dict!
 
 with DAG(
-    'resource_vrealize_workflow',
+    'test_vrealize_workflow',
     default_args=default_args,
-    schedule_interval=None,  # Manual trigger for testing
-    catchup=False
+    schedule_interval=None,
+    catchup=False,
 ) as dag:
 
     fetch_token = KubernetesPodOperator(
