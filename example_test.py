@@ -3,7 +3,10 @@ from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperato
 from airflow.utils.dates import days_ago
 from kubernetes.client import models as k8s
 
+# Define namespace
 namespace = 'admin-635a7131'
+
+# Define default arguments for the DAG
 default_args = {
     "owner": "airflow",
     "depends_on_past": False,
@@ -11,11 +14,21 @@ default_args = {
     "retries": 0
 }
 
-with DAG('test_vrealize_workflow',
-         default_args=default_args,
-         schedule_interval=None,  # Manual trigger for testing
-         catchup=False) as dag:
+# Define Kubernetes resource limits and requests
+resources = k8s.V1ResourceRequirements(
+    requests={"memory": "128Mi", "cpu": "100m"},
+    limits={"memory": "256Mi", "cpu": "200m"}
+)
 
+# Define the DAG
+with DAG(
+    'test_vrealize_workflow',
+    default_args=default_args,
+    schedule_interval=None,  # Manual trigger for testing
+    catchup=False
+) as dag:
+
+    # Task 1: Fetch token
     fetch_token = KubernetesPodOperator(
         namespace=namespace,
         image='python:3.8-slim',
@@ -32,9 +45,11 @@ print(token)
         get_logs=True,
         in_cluster=True,
         is_delete_operator_pod=True,
-        do_xcom_push=True
+        do_xcom_push=True,
+        resources=resources
     )
 
+    # Task 2: Fetch data
     fetch_data = KubernetesPodOperator(
         namespace=namespace,
         image='python:3.8-slim',
@@ -54,9 +69,11 @@ print(f"Fetched data for view {view_id} and resource {resource_id}: {data}")
         get_logs=True,
         in_cluster=True,
         is_delete_operator_pod=True,
-        do_xcom_push=True
+        do_xcom_push=True,
+        resources=resources
     )
 
+    # Task 3: Upload data
     upload_data = KubernetesPodOperator(
         namespace=namespace,
         image='python:3.8-slim',
@@ -73,7 +90,9 @@ print(f"Uploading dummy file for {view_id}_{resource_id}.json to dummy S3 locati
         get_logs=True,
         in_cluster=True,
         is_delete_operator_pod=True,
-        do_xcom_push=True
+        do_xcom_push=True,
+        resources=resources
     )
 
+    # Define task dependencies
     fetch_token >> fetch_data >> upload_data
